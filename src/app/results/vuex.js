@@ -10,16 +10,16 @@ const mutations = {
     state.results = obj.results
     state.results_pagination = obj.results_pagination
   },
-  [TYPES.RESULT_SET_DATA] (state, result) {
-    state.result = result
+  [TYPES.RESULT_SET_DATA] (state, obj) {
+    state.result = obj
   }
 }
 const actions = {
   resultsSetData ({ commit }, obj) {
     commit(TYPES.RESULTS_SET_DATA, obj)
   },
-  resultSetData ({ commit }, result) {
-    commit(TYPES.RESULT_SET_DATA, result)
+  resultSetData ({ commit }, obj) {
+    commit(TYPES.RESULT_SET_DATA, obj)
   }
 }
 const module = {

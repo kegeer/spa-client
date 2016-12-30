@@ -6,6 +6,7 @@
           <el-menu default-active='samples' class="el-menu-demo" mode="horizontal" @select="handleSelect">
             <el-menu-item index="/batches">样品录入</el-menu-item>
             <el-menu-item index="/projects">项目管理</el-menu-item>
+            <el-menu-item index="/pipelines">技术路线管理</el-menu-item>
             <el-menu-item index="/experiments">实验管理</el-menu-item>
             <el-menu-item index="/qcs">数据审核</el-menu-item>
             <el-menu-item index="/results">结果管理</el-menu-item>

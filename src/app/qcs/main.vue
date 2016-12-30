@@ -18,15 +18,13 @@
       </el-button-group>
     </div>
 
-    <el-table v-loading="fetching" :data="projects" stripe border style="width: 100%;">
+    <el-table v-loading="fetching" :data="qcs" stripe border style="width: 100%;">
       <el-table-column prop="id" label="ID" width="80"></el-table-column>
       <el-table-column prop="run_id" label="上机ID"></el-table-column>
-      <el-table-column prop="manager" label="负责人"></el-table-column>
+      <el-table-column prop="created_at" label="数据下机日期"></el-table-column>
       <el-table-column inline-template label="操作" width="180">
         <div>
-          <el-button @click="tasks($index)" type="primary" icon="plus" size="mini">
-          </el-button>
-          <el-button @click="edit($index)" type="default" icon="edit" size="mini">
+          <el-button @click="show($index)" type="primary" icon="plus" size="mini">
           </el-button>
           <el-button @click="askRemove($index)" type="warning" icon="delete" size="mini">
           </el-button>
@@ -37,50 +35,17 @@
     <div class="pagination">
       <el-pagination @current-change="navigate" :current-page="pagination.current_page" :page-size="pagination.per_page" layout="total, prev, pager, next, jumper" :total="pagination.total"></el-pagination>
     </div>
-
-    <el-dialog :title="formTitle" v-model="isFormVisible" :close-on-click-modal="false" @close="close">
-      <el-form :model="form" label-width="80px" :rules="formRules" ref="form">
-        <el-form-item label="名称" ref="firstInput" prop="name">
-          <el-input v-model="form.name" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="负责人" prop="manager">
-          <el-input v-model="form.manager" auto-complete="off"></el-input>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="close">取消</el-button>
-        <el-button type="primary" @click.native.prevent="submit" :loading="formLoading">{{ fromButtonText }}</el-button>
-      </div>
-    </el-dialog>
   </div>
 </main>
 </template>
 
 <script>
-import _ from 'lodash'
 import { mapState, mapActions } from 'vuex'
 export default {
   data () {
     return {
       name: '',
-      active: false,
-      form: {
-        id: 0,
-        name: '',
-        manager: ''
-      },
-      isFormVisible: false,
-      formTitle: '编辑',
-      fromButtonText: '保存',
-      formLoading: false,
-      formRules: {
-        name: [
-          {required: true, message: '请输入名称', trigger: 'blure'}
-        ],
-        maneger: [
-          {required: true, message: '请选择负责人', trigger: 'blure'}
-        ]
-      }
+      active: false
     }
   },
   mounted () {
@@ -88,36 +53,30 @@ export default {
   },
   computed: {
     ...mapState({
-      list: state => state.Projects.list,
-      pagination: state => state.Projects.pagination,
+      qcs: state => state.Qcs.qcs,
+      pagination: state => state.Qcs.qcs_pagination,
       fetching: state => state.fetching
     }),
-    projects () {
-      return this.list
-    },
     currentPage () {
       return parseInt(this.$route.query.page, 10) || 1
-    },
-    isEditing () {
-      return this.form.id > 0
     }
   },
   watch: {
     currentPage: 'fetch'
   },
   methods: {
-    ...mapActions(['setFetching', 'projectsSetData']),
+    ...mapActions(['setFetching', 'qcsSetData']),
     fetch () {
       this.setFetching({
         fetching: true
       })
-      this.$http.get(`projects?page=${this.currentPage}`)
+      this.$http.get(`qcs?page=${this.currentPage}`)
         .then(({
           data
         }) => {
-          this.projectsSetData({
-            list: data.data,
-            pagination: data.meta.pagination
+          this.qcsSetData({
+            qcs: data.data,
+            qcs_pagination: data.meta.pagination
           })
           this.setFetching({
             fetching: false
@@ -127,28 +86,21 @@ export default {
     search () {
       console.log('search')
     },
-    tasks (index) {
-      const { id } = this.projects[index]
+    show (index) {
+      const { id } = this.qcs[index]
       this.$router.push({
-        name: 'tasks.index',
+        name: 'qcs.show',
         params: {
           id
         }
       })
     },
-    edit (index) {
-      this.isFormVisible = true
-      this.formTitle = '编辑'
-      this.fromButtonText = '更新'
-      const project = this.projects[index]
-      this.form = {...project}
-    },
     askRemove (index) {
-      const project = this.projects[index]
+      const qc = this.qcs[index]
       this.$confirm('确认删除记录吗？', '提示', {
         type: 'warning'
       }).then(() => {
-        this.$http.delete(`projects/${project.id}`)
+        this.$http.delete(`qcs/${qc.id}`)
           .then(() => {
             this.fetch()
             this.$notify({
@@ -166,62 +118,9 @@ export default {
           })
       })
     },
-    submit () {
-      this.$refs.form.validate((valid) => {
-        if (valid) {
-          this.setFetching({
-            fetching: true
-          })
-          if (this.isEditing) {
-            this.update()
-          } else {
-            this.save()
-          }
-        } else {
-          this.$notify({
-            title: '错误',
-            message: '表单有错误，请检查后再提交',
-            type: 'error'
-          })
-        }
-      })
-    },
-    close () {
-      this.$refs.form.resetFields()
-      this.isFormVisible = false
-    },
-    update () {
-      this.$http.put(`projects/${this.form.id}`, this.form)
-        .then(() => {
-          this.close()
-          this.fetch()
-          this.setFetching({
-            fetching: false
-          })
-          this.$notify({
-            title: '成功',
-            message: '更新成功',
-            type: 'success'
-          })
-        })
-    },
-    save () {
-      this.$http.post('projects', _.pick(this.form, ['name', 'manager'])).then(() => {
-        this.close()
-        this.fetch()
-        this.setFetching({
-          fetching: false
-        })
-        this.$notify({
-          title: '成功',
-          message: '创建成功',
-          type: 'success'
-        })
-      })
-    },
     navigate (page) {
       this.$router.push({
-        name: 'projects.index',
+        name: 'qcs.index',
         query: {
           page
         }

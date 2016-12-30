@@ -19,6 +19,6 @@
     text-align: center;
   }
   .cover {
-    max-width: 800px;
+    max-width: 400px;
   }
 </style>

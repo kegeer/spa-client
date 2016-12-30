@@ -10,9 +10,9 @@ export default (http, store, router) => {
           name: 'auth.signin'
         })
       }
-      if ([500, 501].indexOf(response.status) > -1) {
-        router.go(router.currentRoute)
-      }
+      // if ([500, 501].indexOf(response.status) > -1) {
+      //   router.go(router.currentRoute)
+      // }
       if (isArray(response.data)) {
         store.dispatch('setMessage', {
           type: 'error', message: response.data.messages

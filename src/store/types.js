@@ -23,3 +23,7 @@ export const QC_SET_DATA = 'QC_SET_DATA'
 // result
 export const RESULTS_SET_DATA = 'RESULTS_SET_DATA'
 export const RESULT_SET_DATA = 'RESULT_SET_DATA'
+
+// pipeline
+export const PIPELINES_SET_DATA = 'PIPELINES_SET_DATA'
+export const PROTOCOLS_SET_DATA = 'PROTOCOLS_SET_DATA'

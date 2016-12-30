@@ -10,16 +10,16 @@ const mutations = {
     state.qcs = obj.qcs
     state.qcs_pagination = obj.qcs_pagination
   },
-  [TYPES.QC_SET_DATA] (state, qc) {
-    state.qc = qc
+  [TYPES.QC_SET_DATA] (state, obj) {
+    state.qc = obj.qc
   }
 }
 const actions = {
   qcsSetData ({ commit }, obj) {
     commit(TYPES.QCS_SET_DATA, obj)
   },
-  qcSetData ({ commit }, qc) {
-    commit(TYPES.QC_SET_DATA, qc)
+  qcSetData ({ commit }, obj) {
+    commit(TYPES.QC_SET_DATA, obj)
   }
 }
 const module = {

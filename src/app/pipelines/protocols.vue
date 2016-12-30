@@ -2,9 +2,8 @@
 <main>
   <div class="main-left">
     <el-menu default-active="/active" class="el-menu-vertical-demo" :router="true">
-      <el-menu-item index="/active" :class="{'isActive': active}">所有项目</el-menu-item>
-      <el-menu-item index="/active" :class="{'isActive': active}">所有任务</el-menu-item>
-      <el-menu-item index="/active" :class="{'isActive': active}">负责人管理</el-menu-item>
+      <el-menu-item index="/active" :class="{'isActive': active}">技术路线管理</el-menu-item>
+      <el-menu-item index="/active" :class="{'isActive': active}">实验方法管理</el-menu-item>
     </el-menu>
   </div>
 
@@ -12,8 +11,8 @@
     <breadcrumb></breadcrumb>
     <div class="filters">
       <div class="filter">
-        项目负责人：
-        <el-input placeholder="请输入谱元编号" v-model="name"></el-input>
+        关键词：
+        <el-input placeholder="请输入关键词" v-model="name"></el-input>
       </div>
       <el-button-group style="display: inline-block;">
         <el-button type="primary" @click="search" icon="search">搜索</el-button>
@@ -21,14 +20,12 @@
       </el-button-group>
     </div>
 
-    <el-table v-loading="fetching" :data="projects" stripe border style="width: 100%;">
+    <el-table v-loading="fetching" :data="protocols" stripe border style="width: 100%;">
       <el-table-column prop="id" label="ID" width="80"></el-table-column>
+      <el-table-column prop="procedure" label="所属流程"></el-table-column>
       <el-table-column prop="name" label="名称"></el-table-column>
-      <el-table-column prop="manager" label="负责人"></el-table-column>
       <el-table-column inline-template label="操作" width="180">
         <div>
-          <el-button @click="tasks($index)" type="primary" icon="plus" size="mini">
-          </el-button>
           <el-button @click="edit($index)" type="default" icon="edit" size="mini">
           </el-button>
           <el-button @click="askRemove($index)" type="warning" icon="delete" size="mini">
@@ -43,11 +40,14 @@
 
     <el-dialog :title="formTitle" v-model="isFormVisible" :close-on-click-modal="false" @close="close">
       <el-form :model="form" label-width="80px" :rules="formRules" ref="form">
-        <el-form-item label="名称" ref="firstInput" prop="name">
+        <el-form-item label="所属流程" ref="firstInput" prop="name">
+          <el-input v-model="form.procedure" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="负责人" prop="manager">
-          <el-input v-model="form.manager" auto-complete="off"></el-input>
+        <el-form-item label="详细步骤" prop="content">
+          <el-input v-model="form.content" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -69,19 +69,20 @@ export default {
       active: false,
       form: {
         id: 0,
+        procedure: 0,
         name: '',
-        manager: ''
+        content: ''
       },
       isFormVisible: false,
       formTitle: '编辑',
       fromButtonText: '保存',
       formLoading: false,
       formRules: {
+        procedure: [
+          {required: true, message: '请选择所属流程', trigger: 'blure'}
+        ],
         name: [
           {required: true, message: '请输入名称', trigger: 'blure'}
-        ],
-        maneger: [
-          {required: true, message: '请选择负责人', trigger: 'blure'}
         ]
       }
     }
@@ -91,13 +92,10 @@ export default {
   },
   computed: {
     ...mapState({
-      list: state => state.Projects.list,
-      pagination: state => state.Projects.pagination,
+      protocols: state => state.Pipelines.protocols,
+      pagination: state => state.Pipelines.protocols_pagination,
       fetching: state => state.fetching
     }),
-    projects () {
-      return this.list
-    },
     currentPage () {
       return parseInt(this.$route.query.page, 10) || 1
     },
@@ -109,18 +107,18 @@ export default {
     currentPage: 'fetch'
   },
   methods: {
-    ...mapActions(['setFetching', 'projectsSetData']),
+    ...mapActions(['setFetching', 'protocolsSetData']),
     fetch () {
       this.setFetching({
         fetching: true
       })
-      this.$http.get(`projects?page=${this.currentPage}`)
+      this.$http.get(`protocols?page=${this.currentPage}`)
         .then(({
           data
         }) => {
-          this.projectsSetData({
-            list: data.data,
-            pagination: data.meta.pagination
+          this.protocolsSetData({
+            protocols: data.data,
+            protocols_pagination: data.meta.pagination
           })
           this.setFetching({
             fetching: false
@@ -135,28 +133,19 @@ export default {
       this.formTitle = '新增'
       this.fromButtonText = '创建'
     },
-    tasks (index) {
-      const { id } = this.projects[index]
-      this.$router.push({
-        name: 'tasks.index',
-        params: {
-          id
-        }
-      })
-    },
     edit (index) {
       this.isFormVisible = true
       this.formTitle = '编辑'
       this.fromButtonText = '更新'
-      const project = this.projects[index]
-      this.form = {...project}
+      const protocol = this.protocols[index]
+      this.form = {...protocol}
     },
     askRemove (index) {
-      const project = this.projects[index]
+      const protocol = this.protocols[index]
       this.$confirm('确认删除记录吗？', '提示', {
         type: 'warning'
       }).then(() => {
-        this.$http.delete(`projects/${project.id}`)
+        this.$http.delete(`protocols/${protocol.id}`)
           .then(() => {
             this.fetch()
             this.$notify({
@@ -199,7 +188,7 @@ export default {
       this.isFormVisible = false
     },
     update () {
-      this.$http.put(`projects/${this.form.id}`, this.form)
+      this.$http.put(`protocols/${this.form.id}`, this.form)
         .then(() => {
           this.close()
           this.fetch()
@@ -214,7 +203,7 @@ export default {
         })
     },
     save () {
-      this.$http.post('projects', pick(this.form, ['name', 'manager'])).then(() => {
+      this.$http.post('protocols', pick(this.form, ['procedure', 'name', 'content'])).then(() => {
         this.close()
         this.fetch()
         this.setFetching({
@@ -229,7 +218,7 @@ export default {
     },
     navigate (page) {
       this.$router.push({
-        name: 'projects.index',
+        name: 'protocols.index',
         query: {
           page
         }
